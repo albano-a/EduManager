@@ -8,7 +8,10 @@ import javax.swing.table.*;
 import dao.DisciplinaDAO;
 import core.Disciplina;
 import java.util.List;
-
+import javax.swing.RowFilter;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
+import javax.swing.table.TableRowSorter;
 /**
  *
  * @author aalbano
@@ -23,19 +26,106 @@ public class DisciplinasUI extends javax.swing.JFrame {
         setLocationRelativeTo(null);
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         carregarDados();
+        
+        pesquisarDados();
+        
+        editarDados();
+    }
+    
+    private void pesquisarDados() {
+        DefaultTableModel mdl = (DefaultTableModel) tblDisciplinas.getModel();
+
+        TableRowSorter<DefaultTableModel> srt = new TableRowSorter<>(mdl);
+
+        tblDisciplinas.setRowSorter(srt);
+
+        txtPesquisar.getDocument().addDocumentListener(new DocumentListener() {
+
+            private void pesquisar() {
+                String txt = txtPesquisar.getText();
+
+                if (txt.trim().isEmpty()) {
+                    srt.setRowFilter(null);
+                } else {
+                    srt.setRowFilter(RowFilter.regexFilter("(?i)" + txt));
+                }
+            }
+
+            @Override
+            public void insertUpdate(DocumentEvent e) {
+                pesquisar();
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+                pesquisar();
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent e) {
+                pesquisar();
+            }
+        });
+    }
+    
+    private void editarDados() {
+
+        DefaultTableModel mdl =
+            (DefaultTableModel) tblDisciplinas.getModel();
+
+        mdl.addTableModelListener(e -> {
+
+            if (e.getType() !=
+                javax.swing.event.TableModelEvent.UPDATE) {
+
+                return;
+            }
+
+            int row = e.getFirstRow();
+
+            try {
+
+                int id =
+                    Integer.parseInt(
+                        mdl.getValueAt(row, 0).toString()
+                    );
+
+                Disciplina d =
+                    DisciplinaDAO.buscarPorId(id);
+
+                d.setNome(
+                    mdl.getValueAt(row, 1).toString()
+                );
+
+                d.setCargaHoraria(
+                    Integer.parseInt(
+                        mdl.getValueAt(row, 3).toString()
+                    )
+                );
+
+                DisciplinaDAO.atualizar(d);
+
+            } catch (Exception ex) {
+
+                System.err.println(
+                    "Erro ao editar disciplina: "
+                    + ex.getMessage()
+                );
+            }
+        });
     }
 
     /**
      * Carrega os dados de disciplinas do banco de dados
      */
-    private void carregarDados() {
+    public void carregarDados() {
         DefaultTableModel mdl = (DefaultTableModel) tblDisciplinas.getModel();
         mdl.setRowCount(0);
 
         try {
             List<Disciplina> disciplinas = DisciplinaDAO.listarTodas();
             for (Disciplina d : disciplinas) {
-                mdl.addRow(new Object[] { d.getId(), d.getNome(), d.getProf().getNome(), "Editar" });
+                mdl.addRow(new Object[] { d.getId(), d.getNome(), d.getProf().getNome(), d.getCargaHoraria()});
             }
         } catch (Exception e) {
             System.err.println("Erro ao carregar disciplinas: " + e.getMessage());
@@ -49,6 +139,7 @@ public class DisciplinasUI extends javax.swing.JFrame {
      */
     // <editor-fold defaultstate="collapsed" desc="Generated
     // <editor-fold defaultstate="collapsed" desc="Generated
+    // <editor-fold defaultstate="collapsed" desc="Generated
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
@@ -59,7 +150,6 @@ public class DisciplinasUI extends javax.swing.JFrame {
         tblDisciplinas = new javax.swing.JTable();
         txtPesquisar = new javax.swing.JTextField();
         btnAdicionar = new javax.swing.JButton();
-        btnEditar = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -74,7 +164,7 @@ public class DisciplinasUI extends javax.swing.JFrame {
 
             },
             new String [] {
-                "ID", "Nome", "Carga Horária", "Ações"
+                "ID", "Nome", "Professor", "Carga Horária"
             }
         ));
         jScrollPane2.setViewportView(tblDisciplinas);
@@ -84,8 +174,6 @@ public class DisciplinasUI extends javax.swing.JFrame {
 
         btnAdicionar.setText("Adicionar");
         btnAdicionar.addActionListener(this::btnAdicionarActionPerformed);
-
-        btnEditar.setText("Editar");
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
@@ -101,9 +189,7 @@ public class DisciplinasUI extends javax.swing.JFrame {
                     .addGroup(jPanel1Layout.createSequentialGroup()
                         .addComponent(txtPesquisar, javax.swing.GroupLayout.PREFERRED_SIZE, 510, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(btnAdicionar)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(btnEditar)))
+                        .addComponent(btnAdicionar, javax.swing.GroupLayout.DEFAULT_SIZE, 175, Short.MAX_VALUE)))
                 .addContainerGap())
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addGap(294, 294, 294)
@@ -120,8 +206,7 @@ public class DisciplinasUI extends javax.swing.JFrame {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(txtPesquisar, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(btnAdicionar)
-                    .addComponent(btnEditar))
+                    .addComponent(btnAdicionar))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 304, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
@@ -142,11 +227,7 @@ public class DisciplinasUI extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void btnAdicionarActionPerformed(java.awt.event.ActionEvent evt) {
-        String[] cols = { "ID", "Nome", "Carga Horária", "Ações" };
-        boolean[] edt = { true, true, true, false };
-
-        DefaultTableModel mdl = (DefaultTableModel) tblDisciplinas.getModel();
-        CadastroItem jnc = new CadastroItem(cols, edt, mdl);
+        CadastroDisciplina jnc = new CadastroDisciplina(this);
         jnc.setVisible(true);
 
         carregarDados();
@@ -154,7 +235,6 @@ public class DisciplinasUI extends javax.swing.JFrame {
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnAdicionar;
-    private javax.swing.JButton btnEditar;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel7;
     private javax.swing.JPanel jPanel1;

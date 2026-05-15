@@ -62,4 +62,29 @@ public class TurmasDAO {
 
         return null;
     }
+    
+    public static int totalTurmas() {
+        String sql = "SELECT COUNT(*) AS total FROM turmas";
+        
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        
+        try {
+            conn = DatabaseConnection.getConnection();
+            pstmt = conn.prepareStatement(sql);
+            rs = pstmt.executeQuery();
+            
+            if (rs.next()) {
+                return rs.getInt("total");
+            }
+        } catch (SQLException e) {
+            System.err.println("Erro ao contar turmas: " + e.getMessage());
+            e.printStackTrace();
+        } finally {
+            DatabaseConnection.closeResources(rs, pstmt, conn);
+        }
+        
+        return 0;
+    }
 }

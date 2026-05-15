@@ -7,38 +7,35 @@ package core;
 import java.util.ArrayList;
 import java.util.List;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 
 public class Aluno {
     private int idAluno;
     private String nome;
-    private String email;
     private LocalDate dtNasc;
     private Turma turma;
     private LocalDate dtMatricula;
     private String cpf;
     private String telefone;
     private List<Nota> notas;
-    private List<Frequencia> freqs;
 
-    public Aluno(int id, String nm, String em, LocalDate dt, LocalDate dtm, String cpf, String tel, Turma t) {
+    public Aluno(int id, String nm, LocalDate dt, LocalDate dtm, String cpf, String tel, Turma t) {
         this.idAluno = id;
         this.nome = nm;
-        this.email = em;
         this.dtMatricula = dtm;
         this.cpf = cpf;
         this.telefone = tel;
         this.dtNasc = dt;
         this.turma = t;
         this.notas = new ArrayList<>();
-        this.freqs = new ArrayList<>();
     }
 
     public void addNota(Nota n) {
         notas.add(n);
     }
 
-    public void addFreq(Frequencia f) {
-        freqs.add(f);
+    public String createEmail(String nome) {
+        return nome.toLowerCase().replace(" ", ".") + "@student.com";
     }
 
     public double calcMedia() {
@@ -50,15 +47,8 @@ public class Aluno {
         return soma / notas.size();
     }
 
-    public double calcFreqPct() {
-        if (freqs.isEmpty())
-            return 0;
-        long pres = freqs.stream().filter(Frequencia::isPresente).count();
-        return (double) pres / freqs.size() * 100;
-    }
-
     public boolean isAprovado() {
-        return calcMedia() >= 6.0 && calcFreqPct() >= 75.0;
+        return calcMedia() >= 6.0;
     }
 
     public int getId() {
@@ -68,17 +58,24 @@ public class Aluno {
     public String getNome() {
         return nome;
     }
-
+    
     public LocalDate getDtNasc() {
         return dtNasc;
+    }
+
+    public String getDtNascFormatada() {
+        DateTimeFormatter fmt =
+            DateTimeFormatter.ofPattern("dd/MM/yyyy");
+
+        return dtNasc.format(fmt);
     }
 
     public Turma getTurma() {
         return turma;
     }
-
+    
     public String getEmail() {
-        return email;
+        return nome.toLowerCase().replace(" ", ".") + "@student.com";
     }
 
     public LocalDate getDtMat() {
@@ -96,13 +93,38 @@ public class Aluno {
     public List<Nota> getNotas() {
         return notas;
     }
-
-    public List<Frequencia> getFreqs() {
-        return freqs;
+    
+    public void setNome(String nome) {
+        this.nome = nome;
     }
+
+    public void setDtNasc(LocalDate dtNasc) {
+        this.dtNasc = dtNasc;
+    }
+
+    public void setTurma(Turma turma) {
+        this.turma = turma;
+    }
+
+    public void setDtMat(LocalDate dtMatricula) {
+        this.dtMatricula = dtMatricula;
+    }
+
+    public void setCpf(String cpf) {
+        this.cpf = cpf;
+    }
+
+    public void setTel(String telefone) {
+        this.telefone = telefone;
+    }
+
+    public void setNotas(List<Nota> notas) {
+        this.notas = notas;
+    }
+
 
     @Override
     public String toString() {
-        return "Aluno[" + idAluno + "] " + nome;
+        return nome;
     }
 }

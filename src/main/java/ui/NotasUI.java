@@ -5,36 +5,88 @@
 package ui;
 
 import javax.swing.table.DefaultTableModel;
-
+import dao.*;
+import java.util.List;
+import javax.swing.RowFilter;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
+import javax.swing.table.TableRowSorter;
 /**
  *
  * @author aalbano
  */
-public class NotasFrequenciaUI extends javax.swing.JFrame {
+public class NotasUI extends javax.swing.JFrame {
 
     /**
      * Creates new form Dashboard
      */
-    public NotasFrequenciaUI() {
+    public NotasUI() {
+        initComponents();
+        
+        setLocationRelativeTo(null);
+        setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
+        
         carregarDados();
+        
+        DefaultTableModel mdl = (DefaultTableModel) tblNotasFreq.getModel();
+
+        TableRowSorter<DefaultTableModel> srt = new TableRowSorter<>(mdl);
+
+        tblNotasFreq.setRowSorter(srt);
+
+        txtPesquisar.getDocument().addDocumentListener(new DocumentListener() {
+
+            private void pesquisar() {
+                String txt = txtPesquisar.getText();
+
+                if (txt.trim().isEmpty()) {
+                    srt.setRowFilter(null);
+                } else {
+                    srt.setRowFilter(RowFilter.regexFilter("(?i)" + txt));
+                }
+            }
+
+            @Override
+            public void insertUpdate(DocumentEvent e) {
+                pesquisar();
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+                pesquisar();
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent e) {
+                pesquisar();
+            }
+        });
     }
 
     /**
      * Carrega os dados de notas/frequência do banco de dados
      */
-    private void carregarDados() {
-        DefaultTableModel mdl = (DefaultTableModel) tblNotasFreq.getModel();
+    public void carregarDados() {
+       DefaultTableModel mdl =
+        (DefaultTableModel) tblNotasFreq.getModel();
+
         mdl.setRowCount(0);
 
         try {
-            // Por enquanto, apenas carrega os dados disponíveis
-            // Em produção, filtraria por aluno específico
+
+            List<Object[]> dados =
+                AlunoDAO.listarNotasFrequencias();
+
+            for (Object[] row : dados) {
+                mdl.addRow(row);
+            }
+
         } catch (Exception e) {
-            System.err.println("Erro ao carregar notas: " + e.getMessage());
+
+            System.err.println(
+                "Erro ao carregar dados: " + e.getMessage()
+            );
         }
-        initComponents();
-        setLocationRelativeTo(null);
-        setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
     }
 
     /**
@@ -62,20 +114,21 @@ public class NotasFrequenciaUI extends javax.swing.JFrame {
         jLabel1.setText("EduManager");
 
         jLabel7.setFont(new java.awt.Font("sansserif", 1, 18)); // NOI18N
-        jLabel7.setText("Notas/Frequência");
+        jLabel7.setText("Notas (Média Geral)");
 
         tblNotasFreq.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
 
             },
             new String [] {
-                "Aluno", "Nota", "Frequência"
+                "Aluno", "Nota (Média)", "Situação"
             }
         ));
+        tblNotasFreq.setEnabled(false);
         jScrollPane2.setViewportView(tblNotasFreq);
 
-        txtPesquisar.setText("Pesquisar...");
         txtPesquisar.setName(""); // NOI18N
+        txtPesquisar.addActionListener(this::txtPesquisarActionPerformed);
 
         btnAdicionar.setText("Adicionar");
         btnAdicionar.addActionListener(this::btnAdicionarActionPerformed);
@@ -90,20 +143,20 @@ public class NotasFrequenciaUI extends javax.swing.JFrame {
                 .addContainerGap()
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jScrollPane2)
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
-                        .addGap(0, 0, Short.MAX_VALUE)
-                        .addComponent(jLabel7)
-                        .addGap(247, 247, 247))
                     .addGroup(jPanel1Layout.createSequentialGroup()
                         .addComponent(jLabel1)
                         .addGap(0, 0, Short.MAX_VALUE))
                     .addGroup(jPanel1Layout.createSequentialGroup()
                         .addComponent(txtPesquisar, javax.swing.GroupLayout.PREFERRED_SIZE, 510, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(btnAdicionar)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(btnEditar)))
+                        .addComponent(btnAdicionar)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(btnEditar, javax.swing.GroupLayout.PREFERRED_SIZE, 78, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addContainerGap())
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(jLabel7)
+                .addGap(249, 249, 249))
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -136,24 +189,14 @@ public class NotasFrequenciaUI extends javax.swing.JFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
+    private void txtPesquisarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtPesquisarActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_txtPesquisarActionPerformed
+
     private void btnAdicionarActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_btnAdicionarActionPerformed
-        String[] cols = {
-                "Aluno",
-                "Nota",
-                "Frequência"
-        };
+        CadastroNotas cnc = new CadastroNotas(this);
 
-        boolean[] edt = {
-                true,
-                true,
-                true
-        };
-
-        DefaultTableModel mdl = (DefaultTableModel) tblNotasFreq.getModel();
-
-        CadastroItem jnc = new CadastroItem(cols, edt, mdl);
-
-        jnc.setVisible(true);
+        cnc.setVisible(true);
     }// GEN-LAST:event_btnAdicionarActionPerformed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables

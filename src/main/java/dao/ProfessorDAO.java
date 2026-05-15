@@ -6,7 +6,7 @@ import core.DatabaseConnection;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
-
+import java.time.LocalDate;
 /**
  * DAO (Data Access Object) para a classe Professor
  * Gerencia operações de CRUD no banco de dados
@@ -27,10 +27,11 @@ public class ProfessorDAO {
         try {
             conn = DatabaseConnection.getConnection();
             pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
-            pstmt.setString(1, professor.getNome());
+            String nome = professor.getNome();
+            pstmt.setString(1, nome);
             pstmt.setString(2, professor.getDiscPrincipal());
-            pstmt.setString(3, professor.getNome().toLowerCase().replace(" ", ".") + "@profesor.com");
-            pstmt.setString(4, null);
+            pstmt.setString(3, professor.getEmail());
+            pstmt.setString(4, professor.getTelefone());
 
             pstmt.executeUpdate();
             rs = pstmt.getGeneratedKeys();
@@ -76,6 +77,31 @@ public class ProfessorDAO {
 
         return null;
     }
+    
+    public static int totalProfessores() {
+        String sql = "SELECT COUNT(*) AS total FROM professors";
+        
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        
+        try {
+            conn = DatabaseConnection.getConnection();
+            pstmt = conn.prepareStatement(sql);
+            rs = pstmt.executeQuery();
+            
+            if (rs.next()) {
+                return rs.getInt("total");
+            }
+        } catch (SQLException e) {
+            System.err.println("Erro ao contar professores: " + e.getMessage());
+            e.printStackTrace();
+        } finally {
+            DatabaseConnection.closeResources(rs, pstmt, conn);
+        }
+        
+        return 0;
+    }
 
     /**
      * Lista todos os professores
@@ -110,7 +136,7 @@ public class ProfessorDAO {
      * Atualiza os dados de um professor
      */
     public static boolean atualizar(Professor professor) {
-        String sql = "UPDATE professors SET nome = ?, especialidade = ?, email = ? WHERE id_professor = ?";
+        String sql = "UPDATE professors SET nome = ?, especialidade = ? WHERE id_professor = ?";
 
         Connection conn = null;
         PreparedStatement pstmt = null;
@@ -120,7 +146,7 @@ public class ProfessorDAO {
             pstmt = conn.prepareStatement(sql);
             pstmt.setString(1, professor.getNome());
             pstmt.setString(2, professor.getDiscPrincipal());
-            pstmt.setString(3, professor.getNome().toLowerCase().replace(" ", ".") + "@profesor.com");
+            pstmt.setInt(3, professor.getId());
 
             return pstmt.executeUpdate() > 0;
         } catch (SQLException e) {
@@ -164,8 +190,10 @@ public class ProfessorDAO {
     private static Professor mapearResultSetParaProfessor(ResultSet rs) throws SQLException {
         int id = rs.getInt("id_professor");
         String nome = rs.getString("nome");
+        String telefone = rs.getString("telefone");
+        LocalDate dtAdmissao = rs.getDate("data_admissao").toLocalDate();
         String discPrincipal = rs.getString("especialidade");
 
-        return new Professor(id, nome, discPrincipal);
+        return new Professor(id, nome, telefone, dtAdmissao, discPrincipal);
     }
 }

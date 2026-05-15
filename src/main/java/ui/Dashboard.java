@@ -9,7 +9,7 @@ import java.util.List;
 import javax.swing.table.DefaultTableModel;
 
 import core.Aluno;
-import dao.AlunoDAO;
+import dao.*;
 
 /**
  *
@@ -25,6 +25,7 @@ public class Dashboard extends javax.swing.JFrame {
         setLocationRelativeTo(null);
 
         carregarUltimosAlunos();
+        carregarInformacoes();
     }
 
     private void carregarUltimosAlunos() {
@@ -41,6 +42,18 @@ public class Dashboard extends javax.swing.JFrame {
                     a.getNome(),
             });
         }
+    }
+    
+    private void carregarInformacoes() {
+        int totalAlunos = AlunoDAO.totalAlunos();
+        int totalProfessores = ProfessorDAO.totalProfessores();
+        int totalDisciplinas = DisciplinaDAO.totalDisciplinas();
+        int totalTurmas = TurmasDAO.totalTurmas();
+        
+        lblAlunosCadastrados.setText("Alunos cadastrados: " + String.valueOf(totalAlunos));
+        lblProfessoresCadastrados.setText("Professores cadastrados: " + String.valueOf(totalProfessores));
+        lblDisciplinasAtivas.setText("Disciplinas ativas: " + String.valueOf(totalDisciplinas));
+        lblTurmasAtivas.setText("Turmas ativas: " + String.valueOf(totalTurmas));
     }
 
     /**
@@ -244,7 +257,7 @@ public class Dashboard extends javax.swing.JFrame {
     }// GEN-LAST:event_btnDisciplinasActionPerformed
 
     private void btnNotasFreqActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_btnNotasFreqActionPerformed
-        NotasFrequenciaUI nfui = new NotasFrequenciaUI();
+        NotasUI nfui = new NotasUI();
         nfui.setVisible(true);
     }// GEN-LAST:event_btnNotasFreqActionPerformed
 

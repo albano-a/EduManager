@@ -116,10 +116,11 @@ public class NotaDAO {
         int id = rs.getInt("id_nota");
         int bimestre = rs.getInt("bimestre");
         double nota = rs.getDouble("valor_nota");
-        
+
         Aluno aluno = AlunoDAO.buscarPorId(rs.getInt("id_aluno"));
 
-        Disciplina disc = new Disciplina(rs.getInt("id_disciplina"), rs.getString("disc_nome"), null);
+        // Obter Disciplina completa via DAO (mantém consistência com DisciplinaDAO)
+        Disciplina disc = DisciplinaDAO.buscarPorId(rs.getInt("id_disciplina"));
 
         return new Nota(id, aluno, disc, bimestre, nota);
     }

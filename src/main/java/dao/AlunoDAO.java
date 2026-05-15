@@ -32,13 +32,14 @@ public class AlunoDAO {
         try {
             conn = DatabaseConnection.getConnection();
             pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
-            pstmt.setString(1, aluno.getNome());
-            pstmt.setString(2, aluno.getNome().toLowerCase().replace(" ", ".") + "@student.com");
+            String nome = aluno.getNome();
+            pstmt.setString(1, nome);
+            pstmt.setString(2, aluno.createEmail(nome));
             pstmt.setDate(3, java.sql.Date.valueOf(aluno.getDtNasc()));
             pstmt.setInt(4, aluno.getTurma().getId());
             pstmt.setDate(5, new java.sql.Date(new java.util.Date().getTime()));
-            pstmt.setString(6, null);
-            pstmt.setString(7, null);
+            pstmt.setString(6, aluno.getCpf());
+            pstmt.setString(7, aluno.getTel());
 
             pstmt.executeUpdate();
             rs = pstmt.getGeneratedKeys();
@@ -91,6 +92,31 @@ public class AlunoDAO {
         return null;
     }
 
+    public static int totalAlunos() {
+        String sql = "SELECT COUNT(*) AS total FROM alunos";
+        
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        
+        try {
+            conn = DatabaseConnection.getConnection();
+            pstmt = conn.prepareStatement(sql);
+            rs = pstmt.executeQuery();
+            
+            if (rs.next()) {
+                return rs.getInt("total");
+            }
+        } catch (SQLException e) {
+            System.err.println("Erro ao contar alunos: " + e.getMessage());
+            e.printStackTrace();
+        } finally {
+            DatabaseConnection.closeResources(rs, pstmt, conn);
+        }
+        
+        return 0;
+    }
+    
     /**
      * Lista todos os alunos
      * 
@@ -232,7 +258,6 @@ public class AlunoDAO {
     private static Aluno mapearResultSetParaAluno(ResultSet rs) throws SQLException {
         int id = rs.getInt("id_aluno");
         String nome = rs.getString("nome");
-        String email = rs.getString("email");
         LocalDate dataNascimento = rs.getDate("data_nascimento").toLocalDate();
         LocalDate dataMatricula = rs.getDate("data_matricula").toLocalDate();
         String cpf = rs.getString("cpf");
@@ -244,7 +269,75 @@ public class AlunoDAO {
         int anoLetivo = rs.getInt("ano_letivo");
         Turma turma = new Turma(idTurma, nomeTurma, anoLetivo);
 
-        return new Aluno(id, nome, email, dataNascimento, dataMatricula, cpf, telefone, turma);
+        return new Aluno(id, nome, dataNascimento, dataMatricula, cpf, telefone, turma);
+    }
+    
+    public static List<Object[]> listarNotasFrequencias() {
+        List<Object[]> dados = new ArrayList<>();
+        
+        String sql = """
+            SELECT
+                     a.nome AS aluno,
+                     COALESCE(AVG(n.valor_nota), 0) AS media,
+                     COALESCE(
+                        (
+                       SUM(CASE WHEN f.presente = true THEN 1 ELSE 0 END) * 100.0
+                     ) / NULLIF(COUNT(f.id_frequencia), 0),
+                0) AS frequencia
+                     
+            FROM alunos a
+                     
+            LEFT JOIN notas n
+                     ON a.id_aluno = n.id_aluno
+                     
+            LEFT JOIN frequencias f
+                     ON a.id_aluno = f.id_aluno
+                     
+            GROUP BY a.id_aluno, a.nome
+                     
+            ORDER BY a.nome
+        """;
+        
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        
+        try {
+            conn = DatabaseConnection.getConnection();
+            pstmt = conn.prepareStatement(sql);
+            rs = pstmt.executeQuery();
+
+            while (rs.next()) {
+
+                String aluno = rs.getString("aluno");
+
+                double media = rs.getDouble("media");
+                String situacao = "";
+
+                if (media >= 8.0) {
+                    situacao = "Ótima";
+                } else if (media >= 6.0) {
+                    situacao = "Razoável";
+                } else {
+                    situacao = "Ruim";
+                }
+
+                dados.add(new Object[] {
+                    aluno,
+                    String.format("%.1f", media),
+                    situacao
+                });
+            }
+
+        } catch (SQLException e) {
+            System.err.println("Erro ao carregar notas/frequência: " + e.getMessage());
+            e.printStackTrace();
+
+        } finally {
+            DatabaseConnection.closeResources(rs, pstmt, conn);
+        }
+
+        return dados;
     }
 
     public static List<Aluno> buscarUltimosCadastrados() {

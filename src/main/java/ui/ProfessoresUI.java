@@ -4,11 +4,16 @@
  */
 package ui;
 
+import core.Aluno;
 import javax.swing.table.*;
 import dao.ProfessorDAO;
 import core.Professor;
+import dao.AlunoDAO;
 import java.util.List;
-
+import javax.swing.RowFilter;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
+import javax.swing.table.TableRowSorter;
 /**
  *
  * @author aalbano
@@ -22,20 +27,103 @@ public class ProfessoresUI extends javax.swing.JFrame {
         initComponents();
         setLocationRelativeTo(null);
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
-        carregarDados();
+        
+        carregarDadosProfessores();
+        
+        pesquisarDados();
+        
+        editarDados();
+    }
+    
+    private void pesquisarDados() {
+        DefaultTableModel mdl = (DefaultTableModel) tblProfessores.getModel();
+
+        TableRowSorter<DefaultTableModel> srt = new TableRowSorter<>(mdl);
+
+        tblProfessores.setRowSorter(srt);
+
+        txtPesquisar.getDocument().addDocumentListener(new DocumentListener() {
+
+            private void pesquisar() {
+                String txt = txtPesquisar.getText();
+
+                if (txt.trim().isEmpty()) {
+                    srt.setRowFilter(null);
+                } else {
+                    srt.setRowFilter(RowFilter.regexFilter("(?i)" + txt));
+                }
+            }
+
+            @Override
+            public void insertUpdate(DocumentEvent e) {
+                pesquisar();
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+                pesquisar();
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent e) {
+                pesquisar();
+            }
+        });
+    }
+    
+    private void editarDados() {
+        DefaultTableModel mdl =
+            (DefaultTableModel) tblProfessores.getModel();
+
+        mdl.addTableModelListener(e -> {
+
+            if (e.getType() != javax.swing.event.TableModelEvent.UPDATE) {
+                return;
+            }
+
+            int row = e.getFirstRow();
+
+            try {
+
+                int id = (int) mdl.getValueAt(row, 0);
+
+                Professor pr = ProfessorDAO.buscarPorId(id);
+
+                pr.setNome(
+                    mdl.getValueAt(row, 1).toString()
+                );
+
+                pr.setDiscPrincipal(
+                    mdl.getValueAt(row, 2).toString()
+                );
+                
+                pr.setTelefone(
+                    mdl.getValueAt(row, 3).toString()
+                );
+
+                ProfessorDAO.atualizar(pr);
+
+            } catch (Exception ex) {
+
+                System.err.println(
+                    "Erro ao atualizar aluno: " +
+                    ex.getMessage()
+                );
+            }
+        });
     }
 
     /**
      * Carrega os dados de professores do banco de dados
      */
-    private void carregarDados() {
+    public void carregarDadosProfessores() {
         DefaultTableModel mdl = (DefaultTableModel) tblProfessores.getModel();
         mdl.setRowCount(0);
 
         try {
             List<Professor> professores = ProfessorDAO.listarTodos();
             for (Professor p : professores) {
-                mdl.addRow(new Object[] { p.getId(), p.getNome(), p.getDiscPrincipal(), "Editar" });
+                mdl.addRow(new Object[] { p.getId(), p.getNome(), p.getDiscPrincipal(), p.getTelefone(), p.getEmail(), p.getDtAdm() });
             }
         } catch (Exception e) {
             System.err.println("Erro ao carregar professores: " + e.getMessage());
@@ -59,7 +147,6 @@ public class ProfessoresUI extends javax.swing.JFrame {
         tblProfessores = new javax.swing.JTable();
         txtPesquisar = new javax.swing.JTextField();
         btnAdicionar = new javax.swing.JButton();
-        btnEditar = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -74,46 +161,43 @@ public class ProfessoresUI extends javax.swing.JFrame {
 
             },
             new String [] {
-                "Matrícula", "Nome", "Email", "Ações"
+                "Matrícula", "Nome", "Especialidade", "Telefone", "Email", "Data de Admissão"
             }
         ));
-        tblProfessores.setEnabled(false);
         jScrollPane2.setViewportView(tblProfessores);
         if (tblProfessores.getColumnModel().getColumnCount() > 0) {
             tblProfessores.getColumnModel().getColumn(3).setHeaderValue("Ações");
         }
 
-        txtPesquisar.setText("Pesquisar...");
         txtPesquisar.setName(""); // NOI18N
 
         btnAdicionar.setText("Adicionar");
         btnAdicionar.addActionListener(this::btnAdicionarActionPerformed);
 
-        btnEditar.setText("Editar");
-
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel1Layout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPane2)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                     .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addContainerGap()
+                        .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 719, Short.MAX_VALUE))
+                    .addGroup(javax.swing.GroupLayout.Alignment.LEADING, jPanel1Layout.createSequentialGroup()
+                        .addGap(288, 288, 288)
+                        .addComponent(jLabel7)
+                        .addGap(0, 0, Short.MAX_VALUE))
+                    .addGroup(javax.swing.GroupLayout.Alignment.LEADING, jPanel1Layout.createSequentialGroup()
+                        .addContainerGap()
                         .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jLabel1)
                             .addGroup(jPanel1Layout.createSequentialGroup()
                                 .addComponent(txtPesquisar, javax.swing.GroupLayout.PREFERRED_SIZE, 504, javax.swing.GroupLayout.PREFERRED_SIZE)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(btnAdicionar)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(btnEditar)))
-                        .addGap(0, 3, Short.MAX_VALUE)))
+                                .addComponent(btnAdicionar, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                            .addGroup(jPanel1Layout.createSequentialGroup()
+                                .addComponent(jLabel1)
+                                .addGap(0, 0, Short.MAX_VALUE)))))
                 .addContainerGap())
-            .addGroup(jPanel1Layout.createSequentialGroup()
-                .addGap(288, 288, 288)
-                .addComponent(jLabel7)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -125,8 +209,7 @@ public class ProfessoresUI extends javax.swing.JFrame {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(txtPesquisar, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(btnAdicionar)
-                    .addComponent(btnEditar))
+                    .addComponent(btnAdicionar))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 304, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
@@ -136,7 +219,7 @@ public class ProfessoresUI extends javax.swing.JFrame {
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+            .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -147,19 +230,14 @@ public class ProfessoresUI extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void btnAdicionarActionPerformed(java.awt.event.ActionEvent evt) {
-        String[] cols = { "Matrícula", "Nome", "Email", "Ações" };
-        boolean[] edt = { true, true, true, false };
+        CadastroProfessor cnc = new CadastroProfessor(this);
+        cnc.setVisible(true);
 
-        DefaultTableModel mdl = (DefaultTableModel) tblProfessores.getModel();
-        CadastroItem jnc = new CadastroItem(cols, edt, mdl);
-        jnc.setVisible(true);
-
-        carregarDados();
+        carregarDadosProfessores();
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnAdicionar;
-    private javax.swing.JButton btnEditar;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel7;
     private javax.swing.JPanel jPanel1;
