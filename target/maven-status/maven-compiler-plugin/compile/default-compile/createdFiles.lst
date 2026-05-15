@@ -1,13 +1,6 @@
-com/albano/edumanager/Frequencia.class
-com/albano/edumanager/Nota.class
 ui/CadastroItem.class
-com/albano/edumanager/Disciplina.class
-com/albano/edumanager/Professor.class
 ui/ProfessoresUI.class
-com/albano/edumanager/Turma.class
 ui/Dashboard.class
-com/albano/edumanager/EduManager.class
 ui/NotasFrequenciaUI.class
-com/albano/edumanager/Aluno.class
 ui/AlunosUI.class
 ui/DisciplinasUI.class

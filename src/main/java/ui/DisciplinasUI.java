@@ -5,8 +5,8 @@
 package ui;
 
 import javax.swing.table.*;
-import com.albano.edumanager.dao.DisciplinaDAO;
-import com.albano.edumanager.Disciplina;
+import dao.DisciplinaDAO;
+import core.Disciplina;
 import java.util.List;
 
 /**
